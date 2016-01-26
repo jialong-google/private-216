@@ -1,0 +1,248 @@
+\documentclass{article} % For LaTeX2e
+\usepackage{nips15submit_e,times}
+\usepackage{hyperref}
+\usepackage{mathtools}
+\usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{commath}
+\usepackage{pifont}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\DeclareMathOperator*{\argmax}{argmax}
+\DeclareMathOperator*{\argmin}{argmin}
+\usepackage{url}
+%\documentstyle[nips14submit_09,times,art10]{article} % For LaTeX 2.09
+
+
+\title{CSE253 Homework2}
+
+\author{
+Jialong Li\\
+A53105937\\
+\texttt{jil653@eng.ucsd.edu} 
+}
+
+\newcommand{\fix}{\marginpar{FIX}}
+\newcommand{\new}{\marginpar{NEW}}
+
+\nipsfinalcopy % Uncomment for camera-ready version
+
+\begin{document}
+
+\section{Problem 1}
+Since
+\begin{equation*} 
+t = y(x) + \epsilon
+\end{equation*}
+Based on Maximun likelihood, we have:\\
+\begin{equation*}
+ \theta = \argmax_{\theta}{P(x, t | \theta)}  
+\end{equation*}
+\begin{equation*}
+ \theta = \argmax_{\theta}{\prod_{i=1} {P(x_i, t_i | \theta)}}
+\end{equation*}
+\begin{equation*}
+ \theta = \argmax_{\theta}{\prod_{i=1} {P( t_i | x_i) P(x_i)}}
+\end{equation*}
+$P(x_i)$ could be seen as a constant.
+Then we have:
+\begin{equation*}
+ \theta = \argmax_{\theta}{\prod_{i=1} {P( t_i | x_i)}}
+\end{equation*}
+Given $P( t_i | x_i)$ follows the Gaussian distribution .\\
+\begin{equation*}
+ \theta = \argmax_{\theta}{\prod_{i=1} {\frac{1}{\sqrt{2\pi\sigma^2}}exp(- \frac{(t_i - f(x_i, \theta))^2}{2\sigma^2})}}
+\end{equation*}
+Using Log function, we can obtain:\\
+\begin{equation*}
+ \theta = \argmax_{\theta}{\sum_{i=1} {-(t_i - f(x_i, \theta))^2}}
+\end{equation*}
+Thus\\
+\begin{equation*}
+ \theta = \argmin_{\theta}{\sum_{i=1} {(t_i - f((1, x_i), \theta))^2}}
+\end{equation*}
+
+
+\section{Problem2}
+	\subsection{Derivation}
+		\paragraph{(a)}
+		For output layer (digest reduction with materials on slides):
+		\begin{equation*}
+ 		\delta_k = - \frac{\partial E^n}{\partial a_k^n} = -\frac{\partial E^n}{\partial y_k^n}\frac{\partial y_k^n}{\partial a_k^n}=t_k-y_k
+		\end{equation*}
+
+		\paragraph{(b)}
+		For hidden layer (digest reduction with materials on slides): 
+		\begin{equation*}
+		\delta_j = -\frac{\partial E^n}{\partial a_j^n} = - \sum_{k=1}^c {\frac{\partial E^n}{\partial a_k^n}\frac{\partial a_k^n}{\partial a_j^n}} 
+		\end{equation*}
+		\begin{equation*}
+		= - \sum_{k=1}^c {\frac{\partial E^n}{\partial a_k^n}\frac{\partial a_k^n}{\partial z_j^n} \frac{\partial z_j^n}{\partial a_j^n}}
+		\end{equation*}
+		\begin{equation*}
+		= g'(a_j) \sum_{k=1}^c {(t_k - y_k) \omega_{jk}}
+		\end{equation*}
+		\begin{equation*}
+		= \sigma(a_j)\sigma(-a_j)) \sum_{k=1}^c {(t_k - y_k) \omega_{jk}}
+		\end{equation*}
+	\subsection{Update rule}
+		It is known that in gradient descent:
+		\begin{equation*}
+			\omega_i(t+1)=\omega_i(t) -\alpha \frac{\partial E^n}{\partial \omega_i}
+		\end{equation*}
+		\paragraph{(a)}
+		For output layer:
+			\begin{equation*}
+			\omega_{jk}(t+1) = \omega_{jk}(t) - \alpha (t_k - y_k) z_j 
+			\end{equation*}
+		\paragraph{(b)}
+		For hidden layer:
+			\begin{equation*}
+			\omega_{ij}(t+1) = \omega_{ij}(t) - \alpha  \sigma(a_j)\sigma(-a_j))  \sum_{k=1}^c {(t_k - y_k) \omega_{jk}} x_i
+			\end{equation*}
+
+	\subsection{Vectorize computation}
+		\paragraph{(a)}
+		For hidden layer to output layer:
+		\begin{equation*}
+		W_{HO} = W_{HO}  + \alpha .* (Z^T * (T - Y) )
+		\end{equation*}
+		\paragraph{(b)}
+		For	input layer to hidden layer:
+		\begin{equation*}
+		W_{IH} = W_{IH}  + \alpha .* (X^T * (\sigma(a_j).*\sigma(-a_j).*((T-Y)*\omega^T)))
+		\end{equation*}
+
+
+
+	\subsection{Classification}
+	\paragraph{i.}
+	Please look at appendix for codes. 
+	%%code
+	\paragraph{ii.}
+	I used the numerical methods and compared it with backpropagation result with the same learning rate (2e-5) and the same number of hidden nodes (30). And compare the result within 5 iterations only to find the result (the partial of Entropy to weight) meets with each other. Please look at appendix for codes.
+	%code
+	\paragraph{iii.}
+	I used hold out cross validation to tune my parameters. The result between training accuracy / testing accuracy and iterations are shown below.( blue line stands for training accuracy, green line stands for testing accuracy and red line stands for cross validation accuracy. )
+	The maximum of cross validation happens at 1775 iterations. The last training accuracy is 0.9607. The according accuracy of cross validation is 0.9460. And the according testing accuracy is 0.9305. The total number of training set is 50000. The total number of testing set is 2000.
+	%%code
+	%%pic
+	\subsection{Experiment with Regularization.}
+	The update rule has been changed for:
+	For output layer:
+	\begin{equation*}
+	W_{HO} = W_{HO}  + \alpha .* (Z^T * (T - Y) ) - 2 .* \lambda .* W_{HO}
+	\end{equation*}
+	For hidden layer:
+	\begin{equation*}
+	W_{IH} = W_{IH}  + \alpha .* (X^T * (\sigma(a_j).*\sigma(-a_j).*((T-Y)*\omega^T)))- 2 .* \lambda .* W{IH}
+	\end{equation*}
+	With the same parameter from the last experiment, I get the picture of relation between training accuracy / testing accuracy and iterations.
+	%%code.
+	%%pic.x2.
+	$\lambda= 0.0001$:The maximum of cross validation happens at 1975 iterations. The last training accuracy is 0.9743. The according accuracy of cross validation is 0.9506. And the according testing accuracy is 0.9410.
+	$\lambda=0.001$:
+	The maximum of cross validation happens at 1823 iterations. The last training accuracy is 0.9626. The according accuracy of cross validation is 0.9544. And the according testing accuracy is 0.9410.
+	
+	Comment : with regularization, the speed of convergence is promoted. And the accuracies are promoted also. The bad decay sometimes happens, but the it can correct itself very fast.
+
+	\subsection{Experiment with Momentum.}
+	The update rule has been changed for:
+	For output layer:
+	\begin{equation*}
+	W_{HO}(t+1) = W_{HO}(t)  + \alpha .* (Z(t)^T * (T - Y(t)) ) +\gamma .* \alpha .* (Z(t-1)^T * (T - Y(t-1)) )
+	\end{equation*}
+	For hidden layer:
+	\begin{equation*}
+	W_{IH}(t+1) = W_{IH}(t)  + \alpha .* (X^T * (\sigma(a_j(t)).*\sigma(-a_j(t)).*((T-Y(t))*\omega(t)^T))) +\gamma.* \alpha .* (X^T * (\sigma(a_j(t-1)).*\sigma(-a_j(t-1)).*((T-Y(t-1))*\omega(t-1)^T)))
+	\end{equation*}
+
+    With the same parameter from the last experiment, I get the picture of relation between training accuracy / testing accuracy and iterations.
+	%%code.
+	%%pic.
+
+	$\gamma= 0.9$:The maximum of cross validation happens at 1888 iterations. The last training accuracy is 0.9809. The according accuracy of cross validation is 0.9469. And the according testing accuracy is 0.9360.
+
+	comment: With the power of Momentum, the speed of convergence is improved even better. And the training rate on training set reaches 98\%. But the testing accuracy is just so-so.
+
+
+	\subsection{Experiment with Activations.}
+	\paragraph{tanh}
+	Because $tanh'(x)=1-tanh^2(x)$, here we need to change activation and update rule.
+	update rule for output layer:
+		\begin{equation*}
+		W_{HO} = W_{HO}  + \alpha .* (Z^T * (T - Y) )
+		\end{equation*}
+	update rule for hidden layer:
+		\begin{equation*}
+		W_{IH} = W_{IH}  + \alpha .* (X^T * (1-tanh^2(a_j)).*((T-Y)*\omega^T)))
+		\end{equation*}
+	%%code.
+	%%pic.
+	%%comment
+	The maximum of cross validation happens at 1 iterations. The last training accuracy is 0.. The according accuracy of cross validation is 0.. And the according testing accuracy is 0..
+	comment:
+
+	\paragraph{ReLU}
+	for x>0, relu'(x)=1; for x<0, relu'(x)=0. Here we need to change activation and update rule.
+	update rule for output layer:
+		\begin{equation*}
+		W_{HO} = W_{HO}  + \alpha .* (Z^T * (T - Y) )
+		\end{equation*}
+	update rule for hidden layer:
+		\begin{equation*}
+		W_{IH} = W_{IH}  + \alpha .* (X^T * relu'(a_j).*((T-Y)*\omega^T)))
+		\end{equation*}
+		\begin{equation*}
+		relu'(x)=1 { }x>0
+		\end{equation*}
+		\begin{equation*}
+		relu'(x)=0 { }x<0
+		\end{equation*}
+	%%code.
+	%%pic.
+	%%comment
+	The maximum of cross validation happens at 1 iterations. The last training accuracy is 0.. The according accuracy of cross validation is 0.. And the according testing accuracy is 0..
+	comment:
+
+
+	\subsection{Experiment with Network Topology.}
+	\paragraph{i}
+	double:
+	%%parameter.
+	%%code.
+	%%pic.
+	%%comment
+	The maximum of cross validation happens at 1 iterations. The last training accuracy is 0.. The according accuracy of cross validation is 0.. And the according testing accuracy is 0..
+	comment:
+
+	halving:
+	%%parameter.
+	%%code.
+	%%pic.
+	%%comment
+	The maximum of cross validation happens at 1 iterations. The last training accuracy is 0.. The according accuracy of cross validation is 0.. And the according testing accuracy is 0..
+	comment:
+	\paragraph{i}
+	the update rule for output layer:
+
+	the update rule for upper hidden layer:
+
+	the update rule for lower hidden layer:
+
+	%%parameter.
+	%%code.
+	%%pic.
+	%%comment
+	The maximum of cross validation happens at 1 iterations. The last training accuracy is 0.. The according accuracy of cross validation is 0.. And the according testing accuracy is 0..
+	comment:
+
+
+                                                                                                                                                     
+
+\end{document}
